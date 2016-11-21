@@ -5,9 +5,9 @@ description:         Please see README.md
 homepage:            https://github.com/githubuser/advent2015hs#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
+author:              Shaun P. Lee
 maintainer:          example@example.com
-copyright:           2016 Author name here
+copyright:           2016 Shaun P. Lee
 category:            Web
 build-type:          Simple
 -- extra-source-files:
@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Lib
                      , AlmostLisp
+                     , DeliveringPresents
                      , Wrapping
   build-depends:       aeson >= 0.11.2.1
                      , base >= 4.7 && < 5
