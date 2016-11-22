@@ -35,3 +35,7 @@ almostLispNeg xs = let indexed = zip [0 ..] (scanl (+) 0 (map cnt xs))
                    in
                        fst firstNeg
 ```
+
+## Lessons learned
+- `scanl`
+- indexing with `zip`
