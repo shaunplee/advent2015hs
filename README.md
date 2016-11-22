@@ -74,7 +74,7 @@ parseWrapping c = map (parseString parsePackage mempty) (lines c)
 ```
 Oh, actually, the `Integer` tuples are still in the `Result` monad.  Let's see where this takes us.
 
-How much paper does it take to wrap a present?  '2*l*h + 2*l*w + 2*w*h + smallest side`.  We can do that:
+How much paper does it take to wrap a present?  `2*l*h + 2*l*w + 2*w*h + smallest side`.  We can do that:
 ```haskell
 presentPaper :: Result (Integer, Integer, Integer) -> Integer
 presentPaper (Success (l, w, h)) =
