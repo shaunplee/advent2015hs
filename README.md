@@ -39,6 +39,7 @@ almostLispNeg xs = let indexed = zip [0 ..] (scanl (+) 0 (map cnt xs))
 ## Lessons learned
 - `scanl`
 - indexing with `zip`
+
 # [Day 2: I Was Told There Would Be No Math](http://adventofcode.com/2015/day/2)
 ## Part 1
 *Problem:* Given a list of dimensions of rectangular prism presents (e.g., "2x3x4"), calculate the amount of wrapping paper needed for each present as the surface area plus the area of the smallest size.
