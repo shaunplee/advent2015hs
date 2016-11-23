@@ -10,7 +10,7 @@ md5 = hashlazy
 secret = "iwrupvqb"
 
 mine :: String -> Integer
-mine s = mineRecur (fromString s) 1 where
+mine secret = mineRecur (fromString secret) 1 where
     mineRecur sec c =
         let try = LB.append sec (fromString $ show c)
         in case show $ md5 try of

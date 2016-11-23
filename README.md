@@ -191,3 +191,48 @@ robotCountHouses ds = let cs = map dToCoords ds
                           Set.size $ Set.union santaHouses robotHouses
 ```
 Then the rest goes according to plan.
+
+# [Day 4: The Ideal Stocking Stuffer](http://adventofcode.com/2015/day/4)
+*Problem:* Given a secret key (8 characters), find the smallest positive integer that you can concatenate onto the end of the secret key such that the MD5 hash of the concatenated value starts with {5,6}`0`s.
+
+First, how do we calculate MD5 hashes in Haskell?  Hoogle suggests there's some sort of `Crypto.Hash` library.  Google says it comes from `cryptonite`.  The docs say there's:
+```haskell
+hashlazy :: HashAlgorithm a => ByteString -> Digest a
+```
+That seems as good as anything, whatever this `ByteString` thing is.  Oh, there's an `MD5` instance of the `HashAlgorithm` class.  That seems applicable.
+
+This is my first time encountering `ByteString`, though I've heard that Haskell has this problem with ~3 different ways to express strings. Hoogle saves the day again, as searching for `String -> ByteString` gives this as one of the results:
+```haskell
+Data.ByteString.Lazy.UTF8 fromString :: String -> ByteString
+```
+Let's import this stuff:
+```haskell
+import           Crypto.Hash
+import qualified Data.ByteString.Lazy      as LB
+import           Data.ByteString.Lazy.UTF8 (fromString)
+```
+And let's define an `md5` hashing function:
+```haskell
+md5 :: LB.ByteString -> Digest MD5
+md5 = hashlazy
+```
+And let's see how it works:
+```haskell
+λ> md5 (fromString "abc")
+900150983cd24fb0d6963f7d28e17f72
+```
+Well, it gave me something back, but it's a `Digest MD5`, so I don't know how I'll be able to pattern match on it to find 5 leading `0`s.  On the other hand, it printed to the repl, so it must be an instance of `Show`.  Let's abuse this:
+```haskell
+λ> show $ md5 (fromString "abc")
+"900150983cd24fb0d6963f7d28e17f72"
+```
+Now we can pattern match on it like it's a `String` (there's gotta be a better way).  The rest should be self explanatory:
+```haskell
+mine :: String -> Integer
+mine secret = mineRecur (fromString secret) 1 where
+    mineRecur sec c =
+        let try = LB.append sec (fromString $ show c)
+        in case show $ md5 try of
+            ('0':'0':'0':'0':'0':_) -> c
+            otherwise               -> mineRecur sec (c + 1)
+```
