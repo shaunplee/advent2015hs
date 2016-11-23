@@ -11,9 +11,6 @@ instance Monoid Coord where
     mappend (Coord xa xb) (Coord ya yb) = Coord (xa + ya) (xb + yb)
     mempty = Coord 0 0
 
-add :: Coord -> Coord -> Coord
-add (Coord xa xb) (Coord ya yb) = Coord (xa + ya) (xb + yb)
-
 dToCoords :: Char -> Coord
 dToCoords '^' = Coord 0 1
 dToCoords 'v' = Coord 0 (-1)
