@@ -191,6 +191,11 @@ robotCountHouses ds = let cs = map dToCoords ds
                           Set.size $ Set.union santaHouses robotHouses
 ```
 Then the rest goes according to plan.
+## Lessons learned
+- `scanl` is great
+- `monoid`s are everywhere
+- I probably didn't need a `monoid` in this case.
+- How do you deal with the element pairing thing?
 
 # [Day 4: The Ideal Stocking Stuffer](http://adventofcode.com/2015/day/4)
 *Problem:* Given a secret key (8 characters), find the smallest positive integer that you can concatenate onto the end of the secret key such that the MD5 hash of the concatenated value starts with {5,6}`0`s.
@@ -236,3 +241,6 @@ mine secret = mineRecur (fromString secret) 1 where
             ('0':'0':'0':'0':'0':_) -> c
             otherwise               -> mineRecur sec (c + 1)
 ```
+## Lessons learned
+- Haskell libraries are not all that scary!
+- Compiling makes things run a little faster
