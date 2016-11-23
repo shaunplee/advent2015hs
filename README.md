@@ -130,3 +130,64 @@ calculateRibbon c = sum $ map presentRibbon $ parseWrapping c
 ```
 ## Lessons learned
 - Use parsers, they're not that bad.
+
+# [Day 3: Perfectly Spherical Houses in a Vacuum](http://adventofcode.com/2015/day/3)
+## Part 1
+*Problem:* Santa receives a list of directions (the chars `^v<>`) and delivers presents to an infinite 2D grid of houses. For each character read, Santa moves one house in that direction (e.g., `^` means move one house north).  How many unique houses will Santa visit?
+
+The plan is to represent each location that Santa visits as a coordinate pair, e.g., `(0,0)` for the starting location.  Then each direction gets mapped to a direction (e.g., `^` becomes `(0,1)`, `<` becomes `(-1,0)`, etc.).  Finding each visited house for each move just becomes a `scanl`, because we're accumulating the steps.
+
+Let's define a `Coord` data type to keep track of Santa's location. (There's probably some nicer way to use `newtype` or something to accomplish this...I should look in to that.)
+```haskell
+data Coord = Coord Integer Integer
+    deriving (Show, Eq, Ord)
+```
+And come to think of it, what we're actually doing is sort of like a monoid, so let's define that as well:
+```haskell
+instance Monoid Coord where
+    mappend (Coord xa xb) (Coord ya yb) = Coord (xa + ya) (xb + yb)
+    mempty = Coord 0 0
+```
+Let's map those directions to `Coord`s that we can `<>` together:
+```haskell
+dToCoords :: Char -> Coord
+dToCoords '^' = Coord 0 1
+dToCoords 'v' = Coord 0 (-1)
+dToCoords '>' = Coord 1 0
+dToCoords '<' = Coord (-1) 0
+dToCoords _   = Coord 0 0
+```
+To find the unique `Coord`s only, I'll dump them into a `Set`, then count the size of the `Set`, so we can put the pieces together like this:
+```haskell
+countHouses :: String -> Int
+countHouses ds = Set.size $
+    Set.fromList $ scanl mappend mempty $ map dToCoords ds
+```
+This maps our `dToCoords` function over the input list of directions `ds`.  We then use `scanl` with the conveniently defined `Monoid` instance of `Coords` to accumulate Santa's position with each move.  `Set.fromList` turns the list into a `Set`, and `Set.size` gives us the number of unique houses visited.
+
+## Part 2
+*Problem:* Now Santa creates a Robo-Santa to help deliver presents.  Robo-Santa and Santa start at the same location, but they take turns moving based on alternate instructions.  Now how many unique houses are visited?
+
+We're going to split up the inputs with alternating values going to Santa or Robo-Santa, run the `scanl` stuff on Santa and Robo-Santa separately, then take the size of the union of the resulting sets.
+
+There must be a better way to split up alternating values in a list.  Something like `deinterleave`.  Oh well:
+```haskell
+splitToPairs :: Monoid a => [a] -> [(a, a)]
+splitToPairs []  = []
+splitToPairs [ x ] = [ (x, mempty) ]
+splitToPairs (x : y : xs) =
+    (x, y) : splitToPairs xs
+```
+All this does is take adjacent values and put them into tuples.  Once we do that, we can `unzip` to split these into two separate lists (e.g., the lists `santa` and `robot`.
+```haskell
+robotCountHouses :: String -> Int
+robotCountHouses ds = let cs = map dToCoords ds
+                          (santa, robot) = unzip $ splitToPairs cs
+                          santaHouses = Set.fromList $
+                              scanl mappend mempty santa
+                          robotHouses = Set.fromList $
+                              scanl mappend mempty robot
+                      in
+                          Set.size $ Set.union santaHouses robotHouses
+```
+Then the rest goes according to plan.
