@@ -281,13 +281,12 @@ isVowel = (`elem` vowels) -- The backticks and parentheses essentially
 threeVowels :: String -> Bool
 threeVowels s = length (filter isVowel s) >= 3
 ```
-Next, we'll look for at least one occurrence of a character that appears twice in a row.  To do this, we'll zip the list with its `tail` (the `rest` or `cdr`) and then check to see if any of the pairs are the same `Char`:
+Next, we'll look for at least one occurrence of a character that appears twice in a row.  To do this, we'll zip the list with its `tail` (the `rest` or `cdr`) and then check to see if any of the pairs are the same `Char`. If the list is too short to pattern match, then it's an automatic `False`.
 ```haskell
 twiceInRow :: String -> Bool
-twiceInRow []  = False
-twiceInRow [_] = False
-twiceInRow xs = let pairs = zip xs (tail xs)
-    in any (uncurry (==)) pairs
+twiceInRow (x:xs) = let pairs = zip (x:xs) xs
+                    in any (uncurry (==)) pairs
+twiceInRow _ = False
 ```
 HLint suggested the `uncurry (==)` thing in place of my original `(\(x, y) -> x == y`.  I like it.
 
@@ -297,6 +296,39 @@ noBadSubstrings :: String -> Bool
 noBadSubstrings s = let badInfix = ["ab", "cd", "pq", "xy"]
     in not $ or $ map (`isInfixOf` s) badInfix
 ```
+## Part 2
+*Problem:*
+New rules:
+> Now, a nice string is one with all of the following properties:
+
+> - It contains a pair of any two letters that appears at least twice in the string without overlapping, like xyxy (xy) or aabcdefgaa (aa), but not like aaa (aa, but it overlaps).
+> - It contains at least one letter which repeats with exactly one letter between them, like xyx, abcdefeghi (efe), or even aaa.
+
+We'll edit our `countNiceStrings` to filter with `partTwoNiceString`:
+```haskell
+countNiceStrings :: String -> Int
+countNiceStrings input = length $ filter partTwoNiceString (lines input)
+
+partTwoNiceString :: String -> Bool
+partTwoNiceString s = pairAppearsTwice s && repeatWithLetterBetween s
+```
+and now we can define those two properties.
+
+For `pairAppearsTwice`, we'll take the first two characters in the list and see if they appear in the rest of the list. If so, then `True` and if not, then we'll recursively call `pairAppearsTwice` with the tail of the list. If there aren't enough characters in the list to pattern match, then we return `False`.
+```haskell
+pairAppearsTwice :: String -> Bool
+pairAppearsTwice (x:y:xs) = if [x, y] `isInfixOf` xs
+                            then True
+                            else pairAppearsTwice (y:xs)
+pairAppearsTwice _ = False
+```
+`repeatWithLetterBetween` is pretty much the same as `twiceInRow` but we now zip with the `tail` of the `tail` (`cddr`).
+```haskell
+repeatWithLetterBetween :: String -> Bool
+repeatWithLetterBetween (x:y:xs) = let pairs = zip (x:y:xs) xs
+                                   in any (uncurry (==)) pairs
+repeatWithLetterBetween _ = False
+```
 ## Lessons learned
 - Haskell is more like Clojure than I originally gave it credit for.
-- HLint is great for suggesting Haskell malapropisms.
+- HLint is great for fixing Haskell malapropisms.
