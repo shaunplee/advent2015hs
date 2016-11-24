@@ -297,3 +297,6 @@ noBadSubstrings :: String -> Bool
 noBadSubstrings s = let badInfix = ["ab", "cd", "pq", "xy"]
     in not $ or $ map (`isInfixOf` s) badInfix
 ```
+## Lessons learned
+- Haskell is more like Clojure than I originally gave it credit for.
+- HLint is great for suggesting Haskell malapropisms.
