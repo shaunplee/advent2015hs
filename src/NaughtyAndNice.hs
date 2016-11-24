@@ -25,7 +25,7 @@ twiceInRow _ = False
 
 noBadSubstrings :: String -> Bool
 noBadSubstrings s = let badInfix = ["ab", "cd", "pq", "xy"]
-    in not $ or $ map (`isInfixOf` s) badInfix
+                    in not $ or $ map (`isInfixOf` s) badInfix
 
 
 -- Part 2
@@ -41,4 +41,5 @@ pairAppearsTwice _ = False
 repeatWithLetterBetween :: String -> Bool
 repeatWithLetterBetween (x:y:xs) = let pairs = zip (x:y:xs) xs
                                    in any (uncurry (==)) pairs
-repeatWithLetterBetween _ = False
+repeatWithLetterBetween _ =
+    False

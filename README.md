@@ -332,4 +332,4 @@ repeatWithLetterBetween _ = False
 ```
 ## Lessons learned
 - Haskell is more like Clojure than I originally gave it credit for.
-- HLint is great for fixing Haskell malapropisms.
+- HLint is great for expanding your Haskell vocabulary.
