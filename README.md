@@ -4,6 +4,7 @@ Advent of Code 2015 in Haskell
 I'm learning Haskell, so I thought I'd redo the [2015 AoC](http://adventofcode.com/2015) puzzles to prepare for the [2016](http://adventofcode.com/2016) puzzles and to get up to speed with the more practical aspects of solving code challenges in this language.
 
 # [Day 1: Not Quite Lisp](http://adventofcode.com/2015/day/1)
+[AlmostLisp.hs](./src/AlmostLisp.hs)
 ## Part 1
 *Problem:* Given a string of `(` and `)' characters, start at `0`, add `1` for every `(` and subtract `1` for every `)` and output the result.
 
@@ -51,6 +52,7 @@ almostLispNeg xs = let indexed = zip [0 ..] (scanl (+) 0 (map cnt xs))
 - indexing lists with `zip`
 
 # [Day 2: I Was Told There Would Be No Math](http://adventofcode.com/2015/day/2)
+[Wrapping.hs](./src/Wrapping.hs)
 ## Part 1
 *Problem:* Given a list of dimensions of rectangular prism presents (e.g., "2x3x4"), calculate the amount of wrapping paper needed for each present as the surface area plus the area of the smallest size.
 
