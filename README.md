@@ -134,6 +134,7 @@ calculateRibbon c = sum $ map presentRibbon $ parseWrapping c
 - Use parsers, they're not that bad.
 
 # [Day 3: Perfectly Spherical Houses in a Vacuum](http://adventofcode.com/2015/day/3)
+[DeliveringPresents.hs](./src/DeliveringPresents.hs)
 ## Part 1
 *Problem:* Santa receives a list of directions (the chars `^v<>`) and delivers presents to an infinite 2D grid of houses. For each character read, Santa moves one house in that direction (e.g., `^` means move one house north).  How many unique houses will Santa visit?
 
@@ -200,6 +201,7 @@ Then the rest goes according to plan.
 - How do you deal with the element pairing thing?
 
 # [Day 4: The Ideal Stocking Stuffer](http://adventofcode.com/2015/day/4)
+[AdventCoins.hs](./src/AdventCoins.hs)
 *Problem:* Given a secret key (8 characters), find the smallest positive integer that you can concatenate onto the end of the secret key such that the MD5 hash of the concatenated value starts with {5,6}`0`s.
 
 First, how do we calculate MD5 hashes in Haskell?  Hoogle suggests there's some sort of `Crypto.Hash` library.  Google says it comes from `cryptonite`.  The docs say there's:
@@ -246,3 +248,52 @@ mine secret = mineRecur (fromString secret) 1 where
 ## Lessons learned
 - Haskell libraries are not all that scary!
 - Compiling makes things run a little faster
+
+# [Day 5: Doesn't He Have Intern-Elves For This?](http://adventofcode.com/2015/day/5)
+[NaughtyAndNice.hs](./src/NaughtyAndNice.hs)
+## Part 1
+*Problem:*
+> A nice string is one with all of the following properties:
+
+> - It contains at least three vowels (aeiou only), like aei, xazegov, or aeiouaeiouaeiou.
+> - It contains at least one letter that appears twice in a row, like xx, abcdde (dd), or aabbccdd (aa, bb, cc, or dd).
+> - It does not contain the strings ab, cd, pq, or xy, even if they are part of one of the other requirements.
+Given a list of strings, count the number of "nice" strings.
+
+Let's filter the input to keep only the nice strings, then count the length of the filtered list.
+```haskell
+countNiceStrings :: String -> Int
+countNiceStrings input = length $ filter niceString (lines input)
+```
+`niceString` is just the conjunction of the three rules:
+```haskell
+niceString :: String -> Bool
+niceString s = threeVowels s && twiceInRow s && noBadSubstrings s
+```
+So let's write the three rules.  First, we want to make sure that there are at least three vowels in the string
+```haskell
+vowels = "aoeui"
+
+isVowel :: Char -> Bool
+isVowel = (`elem` vowels) -- The backticks and parentheses essentially
+                          -- swap the arguments
+
+threeVowels :: String -> Bool
+threeVowels s = length (filter isVowel s) >= 3
+```
+Next, we'll look for at least one occurrence of a character that appears twice in a row.  To do this, we'll zip the list with its `tail` (the `rest` or `cdr`) and then check to see if any of the pairs are the same `Char`:
+```haskell
+twiceInRow :: String -> Bool
+twiceInRow []  = False
+twiceInRow [_] = False
+twiceInRow xs = let pairs = zip xs (tail xs)
+    in any (uncurry (==)) pairs
+```
+HLint suggested the `uncurry (==)` thing in place of my original `(\(x, y) -> x == y`.  I like it.
+
+Finally, we want to make sure there are no "bad strings":
+```haskell
+noBadSubstrings :: String -> Bool
+noBadSubstrings s = let badInfix = ["ab", "cd", "pq", "xy"]
+    in not $ or $ map (`isInfixOf` s) badInfix
+```
