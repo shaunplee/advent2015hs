@@ -202,7 +202,8 @@ Then the rest goes according to plan.
 
 # [Day 4: The Ideal Stocking Stuffer](http://adventofcode.com/2015/day/4)
 [AdventCoins.hs](./src/AdventCoins.hs)
-*Problem:* Given a secret key (8 characters), find the smallest positive integer that you can concatenate onto the end of the secret key such that the MD5 hash of the concatenated value starts with {5,6}`0`s.
+
+*Problem:* Given a secret key (8 characters), find the smallest positive integer that you can concatenate onto the end of the secret key such that the MD5 hash of the concatenated value starts with {five, six} `0`s.
 
 First, how do we calculate MD5 hashes in Haskell?  Hoogle suggests there's some sort of `Crypto.Hash` library.  Google says it comes from `cryptonite`.  The docs say there's:
 ```haskell
