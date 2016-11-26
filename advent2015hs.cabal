@@ -18,6 +18,7 @@ library
   exposed-modules:     AdventCoins
                      , AlmostLisp
                      , DeliveringPresents
+                     , LiteBrite
                      , NaughtyAndNice
                      , Wrapping
   build-depends:       aeson >= 0.11.2.1
@@ -29,9 +30,11 @@ library
                      , lens-aeson >= 1.0.0.5
                      , parsec
                      , parsers
+                     , random >= 1.1
                      , text
                      , trifecta
                      , utf8-string >= 1.0.1.1
+                     , vector
                      , wreq
   default-language:    Haskell2010
 
