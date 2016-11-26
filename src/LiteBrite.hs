@@ -151,7 +151,7 @@ execNordicInst :: LightBrightness -> Instruction -> LightBrightness
 execNordicInst (LightBrightness state) (Instruction m (Coord x1 y1) (Coord x2 y2)) =
     let f = case m of
             AddOne -> (+ 1)
-            SubOne -> (\x -> x - 1)
+            SubOne -> (\x -> if x == 0 then 0 else x - 1)
             AddTwo -> (+ 2)
             _      -> id
         updateRow i =
