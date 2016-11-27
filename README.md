@@ -523,3 +523,8 @@ That was probably a lot more machinery than I really needed to solve this proble
 ## Part 2
 
 Is not so interesting.  Just a rewrite to use `Int` instead of `Bool` and change the parsers to generate add or subtract `Mode`s instead.  the key difference is the new `execNordicInst` matches to functions for computing those additions and subtractions.  The core `applyInst` function works unchanged.
+
+## Lessons learned
+- `Data.Vector` is easy to use
+- `Trifecta` is getting easier with practice
+- refactoring Haskell is just about as easy as they say
