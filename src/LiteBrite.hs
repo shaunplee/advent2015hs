@@ -72,12 +72,6 @@ parseCoords = do
     return ((Coord (fromInteger startx) (fromInteger starty)),
             (Coord (fromInteger endx) (fromInteger endy)))
 
--- makeFunction :: Instruction -> (Bool -> Bool)
--- makeFunction (Instruction On _ _)     = const True
--- makeFunction (Instruction Off _ _)    = const False
--- makeFunction (Instruction Toggle _ _) = not
--- makeFunction Null                     = id
-
 initState :: LightState
 initState = LightState $ V.generate 1000 (const $ V.generate 1000 $ const False)
 
