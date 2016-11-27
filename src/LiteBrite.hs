@@ -85,13 +85,17 @@ patternLights :: V.Vector Instruction -> LightState
 patternLights = V.foldl' execInst initState
 
 execInst :: LightState -> Instruction -> LightState
-execInst (LightState state) (Instruction m (Coord x1 y1) (Coord x2 y2)) =
+execInst (LightState state) (Instruction m start end) =
     let f = case m of
             On     -> const True
             Off    -> const False
             Toggle -> not
             _      -> id
-        updateRow i =
+    in LightState $ applyInst state f start end
+
+applyInst :: V.Vector (V.Vector a) -> (a -> a) -> Coord -> Coord -> V.Vector (V.Vector a)
+applyInst state f (Coord x1 y1) (Coord x2 y2) =
+    let updateRow i =
             let curRow = state V.! i
                 colUpdate j = (j, f (curRow V.! j))
                 colUpdateV = V.map colUpdate (V.enumFromN y1 ((y2 - y1) + 1))
@@ -99,7 +103,7 @@ execInst (LightState state) (Instruction m (Coord x1 y1) (Coord x2 y2)) =
                 (i, curRow `V.update` colUpdateV)
         rowUpdateV = V.map updateRow (V.enumFromN x1 ((x2 - x1) + 1))
     in
-        LightState $ state `V.update` rowUpdateV
+        state `V.update` rowUpdateV
 
 -- Part 2
 newtype LightBrightness = LightBrightness (V.Vector (V.Vector Int))
@@ -148,18 +152,11 @@ patternNordicLights :: V.Vector Instruction -> LightBrightness
 patternNordicLights = V.foldl' execNordicInst initNordicState
 
 execNordicInst :: LightBrightness -> Instruction -> LightBrightness
-execNordicInst (LightBrightness state) (Instruction m (Coord x1 y1) (Coord x2 y2)) =
+execNordicInst (LightBrightness state) (Instruction m start end) =
     let f = case m of
             AddOne -> (+ 1)
             SubOne -> (\x -> if x == 0 then 0 else x - 1)
             AddTwo -> (+ 2)
             _      -> id
-        updateRow i =
-            let curRow = state V.! i
-                colUpdate j = (j, f (curRow V.! j))
-                colUpdateV = V.map colUpdate (V.enumFromN y1 ((y2 - y1) + 1))
-            in
-                (i, curRow `V.update` colUpdateV)
-        rowUpdateV = V.map updateRow (V.enumFromN x1 ((x2 - x1) + 1))
     in
-        LightBrightness $ state `V.update` rowUpdateV
+        LightBrightness $ applyInst state f start end
