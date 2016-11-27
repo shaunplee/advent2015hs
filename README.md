@@ -333,3 +333,193 @@ repeatWithLetterBetween _ = False
 ## Lessons learned
 - Haskell is more like Clojure than I originally gave it credit for.
 - HLint is great for expanding your Haskell vocabulary.
+
+# [Day 6: Probably a Fire Hazard](http://adventofcode.com/2015/day/6)
+[LiteBrite.hs](./src/LiteBrite.hs)
+## Part 1
+*Problem:* Given a list of instructions for controlling a 1000x1000 grid of lights, how many lights are lit after executing all of the instructions?  Instructions have the form:
+```
+turn on nn,nn through nn,nn
+turn off nn,nn through nn,nn
+toggle nn,nn through nn,nn
+```
+where the `nn` are non-negative integers less than `1000`.
+
+I'll eventually want to do something where I fold over the list of instructions, to update the state of the lights, then count the final number of lights that are on.
+
+Let's set up some data types for handling this data.  Let's also learn to use `Data.Vector`.  The current state of the lights is just a 2D `Vector` of `Bool`s:
+
+```haskell
+import qualified Data.Vector         as V
+
+newtype LightState = LightState (V.Vector (V.Vector Bool))
+    deriving Show
+```
+
+I'll initialize the `LightState` using `Vector.generate`:
+
+```haskell
+initState :: LightState
+initState = LightState $ V.generate 1000 (const $ V.generate 1000 $ const False)
+```
+
+I'll represent each instruction based on the command `turn on`, `turn off`, or `toggle`, which I'll call a `Mode` (I'm not so great at naming), as well as two coordinate pairs that identify the rectangles that the command should apply to:
+
+```haskell
+data Coord = Coord Int Int
+    deriving Show
+
+data Mode = On | Off | Toggle | Noop
+    deriving Show
+
+data Instruction = Instruction Mode Coord Coord
+    deriving Show
+```
+
+I'm going to build up to something like this, where I parse the input to generate a list of instructions, then fold over the instructions (in `patternLights`) to generate a `finalPattern`.  I'll then count the number of `True` values in each row of the state using `V.length . V.filter id`.  This will gives a list of `Int`s (one for each row of the state), so I'll sum them up to get our total:
+
+```haskell
+countLightsOn :: String -> Int
+countLightsOn input =
+    let LightState finalPattern = patternLights (parseInput input)
+        rowCounts = V.map (V.length . V.filter id) finalPattern
+    in sum rowCounts
+```
+
+Let's write more parsers:
+
+```haskell
+import Text.Trifecta
+
+parseOn :: Parser Instruction
+parseOn = do
+    _ <- string "turn on "  -- we dump the text, but still match on it
+    (ca, cb) <- parseCoords
+    return (Instruction On ca cb) -- and detecting the "turn on" is captured
+                                  -- here by the On type
+
+parseCoords :: Parser (Coord, Coord)
+parseCoords = do
+    startx <- decimal
+    _ <- char ','
+    starty <- decimal
+    _ <- string " through "
+    endx <- decimal
+    _ <- char ','
+    endy <- decimal
+    return ((Coord (fromInteger startx) (fromInteger starty)),
+            (Coord (fromInteger endx) (fromInteger endy)))
+```
+
+We'll do the same for the `turn off` and `toggle`:
+
+```haskell
+parseOff :: Parser Instruction
+parseOff = do
+    _ <- string "turn off "
+    (ca, cb) <- parseCoords
+    return (Instruction Off ca cb)
+
+parseToggle :: Parser Instruction
+parseToggle = do
+    _ <- string "toggle "
+    (ca, cb) <- parseCoords
+    return (Instruction Toggle ca cb)
+```
+
+In order to match a line of the input with the correct one of these three, we'll use the `<|>` operator from `Control.Applicative`:
+
+```haskell
+import           Control.Applicative
+
+parseInstruction :: Parser Instruction
+parseInstruction = parseOn <|> parseOff <|> parseToggle
+```
+
+This way, if `parseOn` fails (because the line didn't start with "`turn on`", the parser will continue by trying `parseOff`, then `parseToggle` before giving up and returning `Failure`.  This is super cool.
+
+Given this, the `parseInput` function from the beginning is pretty simple.  `cleanupInstructions` is used to `unwrap` the `Result`s from the parser, and I convert the `Failure`s into `Noop`s.  Presumably, this won't ever be needed.
+
+```haskell
+parseInput :: String -> V.Vector Instruction
+parseInput s = V.fromList $ cleanupInstructions $ map parseLine (lines s)
+
+cleanupInstruction :: Result Instruction -> Instruction
+cleanupInstruction (Failure _) =
+    Instruction Noop (Coord (-1) (-1)) (Coord (-1) (-1))
+cleanupInstruction (Success x) =
+    x
+
+cleanupInstructions :: [Result Instruction] -> [Instruction]
+cleanupInstructions = map cleanupInstruction
+
+parseLine :: String -> Result Instruction
+parseLine = parseString parseInstruction mempty
+```
+
+Ok, now all the machinery is in place to parse those input lines:
+
+```haskell
+λ> parseLine "turn on 0,0 through 300,350"
+Success (Instruction On (Coord 0 0) (Coord 300 350))
+λ>
+λ>
+λ> parseInput "turn on 0,0 through 300,350\ntoggle 42,42 through 100,110"
+[Instruction On (Coord 0 0) (Coord 300 350),Instruction Toggle (Coord 42 42) (Coord 100 110)]
+```
+
+Cool.  A lot of work, but cool.
+
+The aforementioned `patternLights` is just a fold over the instructions:
+
+```haskell
+patternLights :: V.Vector Instruction -> LightState
+patternLights = V.foldl' execInst initState
+```
+
+(I'm assuming `foldl'` to be, by default, the right choice, though I haven't thought this through).
+
+The magic then, is going to be this `execInst`, which takes a `LightState` and an `Instruction` to generate a new `LightState`:
+
+```haskell
+execInst :: LightState -> Instruction -> LightState
+execInst (LightState state) (Instruction m start end) =
+    let f = case m of
+            On     -> const True
+            Off    -> const False
+            Toggle -> not
+            _      -> id
+    in LightState $ applyInst state f start end
+```
+
+I'll match on the `Mode` to identify the right function that we'll `map` onto the values in the rectangle defined by `start` and `end`, then delegate the hard work to `applyInst`.
+
+```haskell
+applyInst :: V.Vector (V.Vector a)
+          -> (a -> a)
+          -> Coord
+          -> Coord
+          -> V.Vector (V.Vector a)
+applyInst state f (Coord x1 y1) (Coord x2 y2) =
+    let updateRow i =
+            let curRow = state V.! i
+                colUpdate j = (j, f (curRow V.! j))
+                colUpdateV = V.map colUpdate (V.enumFromN y1 ((y2 - y1) + 1))
+            in
+                (i, curRow `V.update` colUpdateV)
+        rowUpdateV = V.map updateRow (V.enumFromN x1 ((x2 - x1) + 1))
+    in
+        state `V.update` rowUpdateV
+```
+
+Yikes.  The idea here is that, to update a `Vector a`, `V.update` takes a `Vector` of `(Int, a)` tuples and returns a new `Vector a` with the values at the locations specified by the `car` of the tuple with the value at the `cadr` of the tuple.
+
+Let's start with updating the `i`th row using `updateRow`.  We pull out that row using `state V.! i` and name it `curRow`.  If a `j`th value is to be updated in that row, it should be replaced with the function `f` applied to the previous value.  Therefore, `colUpdate j = (j, f (curRow V.! j))`, and we can generate the tuple pairs for the `update` by mapping `colUpdate` over an enumeration of the positions to be updated (the `y` coordinates).  The final tuple for that row is therefore `(i, curRow `V.update` colUpdateV)`.
+
+Now to update the 2D vector, I use the newly defined `updateRow` and run this on all the rows that should be affected (the `x` coordinates).  Hence `rowUpdateV = V.map updateRow (V.enumFromN x1 ((x2 - x1) + 1))`, and then we apply the update.
+
+That was probably a lot more machinery than I really needed to solve this problem.
+
+## Part 2
+
+Is not so interesting.  Just a rewrite to use `Int` instead of `Bool` and change the parsers to generate add or subtract `Mode`s instead.  the key difference is the new `execNordicInst` matches to functions for computing those additions and subtractions.  The core `applyInst` function works unchanged.

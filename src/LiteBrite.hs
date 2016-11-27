@@ -87,7 +87,11 @@ execInst (LightState state) (Instruction m start end) =
             _      -> id
     in LightState $ applyInst state f start end
 
-applyInst :: V.Vector (V.Vector a) -> (a -> a) -> Coord -> Coord -> V.Vector (V.Vector a)
+applyInst :: V.Vector (V.Vector a)
+          -> (a -> a)
+          -> Coord
+          -> Coord
+          -> V.Vector (V.Vector a)
 applyInst state f (Coord x1 y1) (Coord x2 y2) =
     let updateRow i =
             let curRow = state V.! i
